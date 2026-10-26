@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es" layout:decorate="~{layout/base}">
+<body>
+  <div layout:fragment="content">
+    <main>
+      <!-- ========== HERO ========== -->
+      <section class="bg-danger text-white py-4">
+        <div class="container">
+          <h2 class="fw-bold mb-2">Contáctanos</h2>
+          <p class="mb-0 text-white-50">
+            Escríbenos para consultas técnicas, solicitudes de presupuesto o seguimiento del estado de reparación de tus equipos informáticos.
+          </p>
+        </div>
+      </section>
+
+      <!-- ========== ALERTA INFO ========== -->
+      <section class="container mt-4">
+        <div class="alert alert-info mb-0" role="alert">
+          Nuestro equipo responde en menos de 24 horas hábiles.
+        </div>
+      </section>
+
+      <!-- ========== SECCION PRINCIPAL ========== -->
+      <section class="container my-5">
+        <div class="row g-4">
+          <div class="col-12 col-md-7">
+            <h4 class="border-start border-4 border-info ps-3 mb-4">Envíanos un mensaje</h4>
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <form id="contact-form" class="row g-3 needs-validation" novalidate>
+                  <div class="col-12 col-md-6">
+                    <label for="nombre-completo" class="form-label">Nombre completo</label>
+                    <input type="text" class="form-control" id="nombre-completo" required>
+                    <div class="invalid-feedback">Por favor ingrese su nombre completo.</div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="correo-electronico" class="form-label">Correo electrónico</label>
+                    <input type="email" class="form-control" id="correo-electronico" required>
+                    <div class="invalid-feedback">Por favor ingrese un correo electrónico válido.</div>
+                  </div>
+                  <div class="col-12">
+                    <label for="asunto-contacto" class="form-label">Asunto</label>
+                    <select class="form-select" id="asunto-contacto" required>
+                      <option selected disabled value="">Seleccione un asunto</option>
+                      <option>Consulta técnica</option>
+                      <option>Presupuesto</option>
+                      <option>Estado de reparación</option>
+                      <option>Otro</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <label for="mensaje-contacto" class="form-label">Mensaje</label>
+                    <textarea class="form-control" id="mensaje-contacto" rows="5" required></textarea>
+                    <div class="invalid-feedback">Por favor ingrese su mensaje.</div>
+                  </div>
+                  <div class="col-12">
+                    <button type="submit" class="btn btn-success">
+                      <i class="bi bi-send me-1"></i>Enviar mensaje
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-5">
+            <h4 class="border-start border-4 border-info ps-3 mb-4">Información</h4>
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="card shadow-sm">
+                  <div class="card-body d-flex align-items-start gap-3">
+                    <i class="bi bi-geo-alt fs-3 text-danger"></i>
+                    <div>
+                      <h6 class="fw-bold mb-1">Dirección</h6>
+                      <p class="mb-0">Av. Arequipa 1234, Lince, Lima</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card shadow-sm">
+                  <div class="card-body d-flex align-items-start gap-3">
+                    <i class="bi bi-telephone fs-3 text-danger"></i>
+                    <div>
+                      <h6 class="fw-bold mb-1">Teléfono</h6>
+                      <p class="mb-0">(01) 234-5678 / 987 654 321</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card shadow-sm">
+                  <div class="card-body d-flex align-items-start gap-3">
+                    <i class="bi bi-clock fs-3 text-danger"></i>
+                    <div>
+                      <h6 class="fw-bold mb-1">Horario</h6>
+                      <p class="mb-0">Lun-Vie 9am-7pm / Sáb 9am-2pm</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-info text-dark mt-3 shadow-sm">
+              <div class="card-body text-center">
+                <i class="bi bi-whatsapp fs-2 d-block mb-2"></i>
+                <h5 class="fw-bold">¿Urgente? Escríbenos al WhatsApp</h5>
+                <p class="mb-3">Atendemos consultas rápidas para coordinar diagnósticos y entregas.</p>
+                <button type="button" class="btn btn-dark w-100">Escribir por WhatsApp</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

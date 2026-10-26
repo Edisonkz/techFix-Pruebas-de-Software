@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+  layout:decorate="~{layout/base}" lang="es">
+
+<body>
+  <div layout:fragment="content">
+    <main>
+      <!-- ========== HERO ========== -->
+      <section class="bg-danger text-white py-4">
+        <div class="container">
+          <!-- ========== ALERTAS ========== -->
+          <div class="alert alert-success alert-dismissible fade show mb-3 d-flex align-items-center gap-2" th:if="${mensajeExito != null}">
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${mensajeExito}"></span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+          </div>
+          <div class="alert alert-danger alert-dismissible fade show mb-3 d-flex align-items-center gap-2" th:if="${mensajeError != null}">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span th:text="${mensajeError}"></span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+          </div>
+          
+          <div class="row g-3 align-items-center">
+            <div class="col-12 col-lg-8">
+              <h2 class="fw-bold mb-2">Gestión de Clientes</h2>
+              <p class="mb-0 text-white-50">
+                Administra la información de clientes registrados, consulta sus datos principales y revisa los equipos
+                asociados a cada perfil.
+              </p>
+            </div>
+            <div class="col-12 col-lg-4 text-lg-end">
+              <span class="badge bg-light text-danger fs-6">Clientes registrados: <span
+                  th:text="${clientesPage.totalElements}">0</span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== BUSCADOR Y BOTON ========== -->
+      <section class="container mt-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+          <div class="flex-grow-1">
+            <input type="text" class="form-control" id="buscar-cliente"
+              placeholder="Buscar cliente por nombre o DNI...">
+          </div>
+          <div class="d-grid">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente" sec:authorize="hasRole('ADMIN')">
+              <i class="bi bi-person-plus me-1"></i>Nuevo Cliente
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== CARDS DE CLIENTES ========== -->
+      <section class="container my-4">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+          <div class="alert alert-warning" th:if="${clientesPage.empty}">
+            No hay clientes registrados en el sistema.
+          </div>
+          <div class="col" th:each="cliente : ${clientesPage.content}">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <div
+                    class="avatar-iniciales rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                    th:text="${cliente.iniciales}">L</div>
+                  <div>
+                    <h5 class="mb-0 fw-bold" th:text="${cliente.nombre}">Laura García</h5>
+                    <small class="text-muted">Cliente registrado</small>
+                  </div>
+                </div>
+                <p class="mb-2"><i class="bi bi-credit-card me-2"></i>ID: <span th:text="${cliente.id}">72645198</span>
+                </p>
+                <p class="mb-2"><i class="bi bi-telephone me-2"></i><span th:text="${cliente.telefono}">987 456
+                    210</span></p>
+                <p class="mb-3"><i class="bi bi-envelope me-2"></i><span
+                    th:text="${cliente.correo}">laura.garcia@correo.com</span></p>
+                <span class="badge" 
+                      th:classappend="${cliente.estado == 'Inactivo' ? 'bg-secondary text-white' : 'bg-info text-dark'}" 
+                      th:text="${cliente.estado != null ? cliente.estado : 'Activo'}">Activo</span>
+              </div>
+              <div class="card-footer bg-white border-0">
+                <div class="d-flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#modalDetalleCliente"
+                    th:attr="data-bs-nombre=${cliente.nombre}, data-bs-dni=${cliente.dni}, data-bs-telefono=${cliente.telefono}, data-bs-correo=${cliente.correo}">
+                    <i class="bi bi-eye me-1"></i>Ver detalle
+                  </button>
+                  <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#modalEditarCliente" sec:authorize="hasRole('ADMIN')"
+                    th:attr="data-bs-id=${cliente.id}, data-bs-nombre=${cliente.nombre}, data-bs-dni=${cliente.dni}, data-bs-correo=${cliente.correo}, data-bs-telefono=${cliente.telefono}, data-bs-estado=${cliente.estado ?: 'Activo'}">
+                    <i class="bi bi-pencil me-1"></i>Editar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Paginación de Bootstrap renderizada por Servidor -->
+        <nav aria-label="Navegación de clientes" class="mt-4" th:if="${clientesPage.totalPages > 1}">
+          <ul class="pagination justify-content-center mb-0">
+            <li class="page-item" th:classappend="${clientesPage.first} ? 'disabled'">
+              <a class="page-link" th:href="@{/clientes(pagina=${clientesPage.number})}">Previous</a>
+            </li>
+            
+            <li class="page-item" th:each="i : ${#numbers.sequence(1, clientesPage.totalPages)}"
+                th:classappend="${clientesPage.number + 1 == i} ? 'active'">
+              <a class="page-link" th:href="@{/clientes(pagina=${i})}" th:text="${i}"></a>
+            </li>
+            
+            <li class="page-item" th:classappend="${clientesPage.last} ? 'disabled'">
+              <a class="page-link" th:href="@{/clientes(pagina=${clientesPage.number + 2})}">Next</a>
+            </li>
+          </ul>
+        </nav>
+      </section>
+
+      <!-- ========== MODALES ========== -->
+      <div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+              <h5 class="modal-title" id="modalNuevoClienteLabel">Registrar Cliente</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <form th:action="@{/clientes/registrar}" method="post" th:object="${cliente}" class="row g-3 needs-validation" novalidate>
+                <div class="col-12">
+                  <label for="nombre-cliente" class="form-label">Nombre completo</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'" id="nombre-cliente" th:field="*{nombre}" required>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="dni-cliente" class="form-label">DNI</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('dni')} ? 'is-invalid'" id="dni-cliente" th:field="*{dni}" maxlength="8" pattern="^\d+$"
+                    required>
+                  <div class="form-text">Ingrese 8 dígitos del documento nacional de identidad.</div>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="correo-cliente" class="form-label">Correo electrónico</label>
+                  <input type="email" class="form-control" th:classappend="${#fields.hasErrors('correo')} ? 'is-invalid'" id="correo-cliente" th:field="*{correo}" required>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('correo')}" th:errors="*{correo}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="telefono-cliente" class="form-label">Teléfono</label>
+                  <input type="tel" class="form-control" th:classappend="${#fields.hasErrors('telefono')} ? 'is-invalid'" id="telefono-cliente" th:field="*{telefono}" placeholder="9XX XXX XXX" pattern="^\d+$"
+                    required>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}"></div>
+                </div>
+                <div class="col-12 text-end mt-4">
+                  <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="submit" class="btn btn-success">Registrar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="modalDetalleCliente" tabindex="-1" aria-labelledby="modalDetalleClienteLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-dark">
+              <h5 class="modal-title" id="modalDetalleClienteLabel">Detalle del Cliente</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                  <div class="border rounded p-3 h-100">
+                    <small class="text-muted d-block">Nombre</small>
+                    <span class="fw-bold" id="detalle-nombre-cliente">Laura García</span>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="border rounded p-3 h-100">
+                    <small class="text-muted d-block">DNI</small>
+                    <span class="fw-bold" id="detalle-dni-cliente">72645198</span>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="border rounded p-3 h-100">
+                    <small class="text-muted d-block">Teléfono</small>
+                    <span class="fw-bold" id="detalle-telefono-cliente">987 456 210</span>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="border rounded p-3 h-100">
+                    <small class="text-muted d-block">Correo</small>
+                    <span class="fw-bold" id="detalle-correo-cliente">laura.garcia@correo.com</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="modalEditarCliente" tabindex="-1" aria-labelledby="modalEditarClienteLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-dark">
+              <h5 class="modal-title" id="modalEditarClienteLabel">Editar Cliente</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <form th:action="@{/clientes/actualizar}" method="post" th:object="${cliente}" class="row g-3 needs-validation" novalidate>
+                <div class="col-12">
+                  <label for="editar-cliente-id" class="form-label">ID de Cliente</label>
+                  <input type="text" class="form-control" id="editar-cliente-id" th:field="*{id}" readonly>
+                </div>
+                <div class="col-12">
+                  <label for="editar-nombre-cliente" class="form-label">Nombre completo</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'" id="editar-nombre-cliente" th:field="*{nombre}" required>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="editar-dni-cliente" class="form-label">DNI</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('dni')} ? 'is-invalid'" id="editar-dni-cliente" th:field="*{dni}" maxlength="8" pattern="^\d+$" required>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="editar-correo-cliente" class="form-label">Correo electrónico</label>
+                  <input type="email" class="form-control" th:classappend="${#fields.hasErrors('correo')} ? 'is-invalid'" id="editar-correo-cliente" th:field="*{correo}" required>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('correo')}" th:errors="*{correo}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="editar-telefono-cliente" class="form-label">Teléfono</label>
+                  <input type="tel" class="form-control" th:classappend="${#fields.hasErrors('telefono')} ? 'is-invalid'" id="editar-telefono-cliente" th:field="*{telefono}" pattern="^\d+$" required>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="editar-estado-cliente" class="form-label">Estado</label>
+                  <select class="form-select" th:classappend="${#fields.hasErrors('estado')} ? 'is-invalid'" id="editar-estado-cliente" th:field="*{estado}" required>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('estado')}" th:errors="*{estado}"></div>
+                </div>
+                <div class="col-12 text-end mt-4">
+                  <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="submit" class="btn btn-info">Guardar Cambios</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+    document.getElementById('buscar-cliente').addEventListener('input', function () {
+        const q = this.value.toLowerCase().trim();
+        document.querySelectorAll('.row.row-cols-1 > .col').forEach(function(col) {
+            const texto = col.textContent.toLowerCase();
+            col.style.display = texto.includes(q) ? '' : 'none';
+        });
+    });
+
+    document.getElementById('modalEditarCliente').addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        document.getElementById('editar-cliente-id').value = button.getAttribute('data-bs-id');
+        document.getElementById('editar-nombre-cliente').value = button.getAttribute('data-bs-nombre');
+        document.getElementById('editar-dni-cliente').value = button.getAttribute('data-bs-dni');
+        document.getElementById('editar-correo-cliente').value = button.getAttribute('data-bs-correo');
+        document.getElementById('editar-telefono-cliente').value = button.getAttribute('data-bs-telefono');
+        document.getElementById('editar-estado-cliente').value = button.getAttribute('data-bs-estado');
+    });
+
+    document.getElementById('modalDetalleCliente').addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        document.getElementById('detalle-nombre-cliente').textContent = button.getAttribute('data-bs-nombre');
+        document.getElementById('detalle-dni-cliente').textContent = button.getAttribute('data-bs-dni');
+        document.getElementById('detalle-telefono-cliente').textContent = button.getAttribute('data-bs-telefono');
+        document.getElementById('detalle-correo-cliente').textContent = button.getAttribute('data-bs-correo');
+    });
+    </script>
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+      var hasErrors = /*[[${#fields.hasErrors('${cliente.*}')}]]*/ false;
+      var clienteId = /*[[${cliente.id}]]*/ null;
+
+      if (hasErrors) {
+        document.addEventListener("DOMContentLoaded", function() {
+          var modalId = clienteId ? 'modalEditarCliente' : 'modalNuevoCliente';
+          var myModal = new bootstrap.Modal(document.getElementById(modalId));
+          myModal.show();
+        });
+      }
+      /*]]>*/
+    </script>
+  </div>
+</body>
+
+</html>

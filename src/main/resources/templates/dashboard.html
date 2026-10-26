@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}" lang="es">
+
+<body>
+  <div layout:fragment="content">
+    <main>
+      <!-- ========== HERO ========== -->
+      <section class="bg-danger text-white py-5">
+        <div class="container">
+          <!-- ========== ALERTAS ========== -->
+          <div class="alert alert-success alert-dismissible fade show mb-4 d-flex align-items-center gap-2" th:if="${mensajeExito != null}">
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${mensajeExito}"></span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+          </div>
+          <div class="alert alert-danger alert-dismissible fade show mb-4 d-flex align-items-center gap-2" th:if="${mensajeError != null}">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span th:text="${mensajeError}"></span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+          </div>
+          
+          <div class="row align-items-center g-4">
+            <div class="col-12 col-lg-7">
+              <span class="badge text-bg-light text-info text-uppercase mb-3">Sistema de gestión</span>
+              <h1 class="display-5 fw-bold">TechFix Solutions</h1>
+              <p class="text-white-50 mb-4">
+                Plataforma de gestión para órdenes de servicio, seguimiento técnico, control de clientes y
+                administración de equipos informáticos del taller ubicado en Lince, Lima.
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevaOrden">
+                  <i class="bi bi-plus-circle me-1"></i>Nueva Orden
+                </button>
+                <a th:href="@{/ordenes}" class="btn btn-outline-light">
+                  <i class="bi bi-clipboard-data me-1"></i>Ver Órdenes
+                </a>
+              </div>
+            </div>
+            <div class="col-12 col-lg-5">
+              <div class="row g-3">
+                <div class="col-6">
+                  <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                      <i class="bi bi-clipboard-check fs-1 text-dark"></i>
+                      <h3 class="fw-bold mt-2 mb-1" th:text="${stats.pendientes}">12</h3>
+                      <p class="mb-0 small text-muted">Órdenes pendientes</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                      <i class="bi bi-gear fs-1 text-info"></i>
+                      <h3 class="fw-bold mt-2 mb-1" th:text="${stats.enProceso}">8</h3>
+                      <p class="mb-0 small text-muted">En proceso</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                      <i class="bi bi-check-circle fs-1 text-success"></i>
+                      <h3 class="fw-bold mt-2 mb-1" th:text="${stats.entregadas}">5</h3>
+                      <p class="mb-0 small text-muted">Órdenes entregadas</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                      <i class="bi bi-people fs-1 text-warning"></i>
+                      <h3 class="fw-bold mt-2 mb-1" th:text="${stats.tecnicosActivos}">3</h3>
+                      <p class="mb-0 small text-muted">Técnicos activos</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== ALERTAS ========== -->
+      <section class="container mt-4">
+        <div th:if="${ordenAlerta != null}" sec:authorize="hasRole('TECNICO')" class="alert alert-warning alert-dismissible fade show" role="alert">
+          Orden <span th:text="${ordenAlerta.id}">#007</span> pendiente —
+          Técnico: <span th:text="${ordenAlerta.tecnicoAsignado}">Martínez, R.</span>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+      </section>
+
+      <!-- ========== CARRUSEL ========== -->
+      <section class="container my-5">
+        <div id="carouselServicios" class="carousel slide" data-bs-ride="carousel">
+          <div class="carousel-indicators">
+            <button type="button" data-bs-target="#carouselServicios" data-bs-slide-to="0" class="active"
+              aria-current="true" aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#carouselServicios" data-bs-slide-to="1"
+              aria-label="Slide 2"></button>
+            <button type="button" data-bs-target="#carouselServicios" data-bs-slide-to="2"
+              aria-label="Slide 3"></button>
+          </div>
+          <div class="carousel-inner rounded">
+            <div class="carousel-item active">
+              <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&h=400&fit=crop"
+                class="d-block w-100 carousel-img" alt="Diagnóstico Técnico">
+              <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                <i class="bi bi-search fs-2 d-block mb-1"></i>
+                <h5 class="fw-bold">Diagnóstico Técnico</h5>
+                <p class="mb-0">Evaluamos fallas de hardware y software para determinar el origen del problema y
+                  proponer la mejor solución para cada equipo.</p>
+              </div>
+            </div>
+            <div class="carousel-item">
+              <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=400&fit=crop"
+                class="d-block w-100 carousel-img" alt="Reparación y Mantenimiento">
+              <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                <i class="bi bi-tools fs-2 d-block mb-1"></i>
+                <h5 class="fw-bold">Reparación y Mantenimiento</h5>
+                <p class="mb-0">Realizamos cambios de componentes, limpieza interna, mantenimiento preventivo y
+                  correctivo para laptops y desktops.</p>
+              </div>
+            </div>
+            <div class="carousel-item">
+              <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&h=400&fit=crop"
+                class="d-block w-100 carousel-img" alt="Instalación de Software">
+              <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                <i class="bi bi-laptop fs-2 d-block mb-1"></i>
+                <h5 class="fw-bold">Instalación de Software</h5>
+                <p class="mb-0">Configuramos sistemas operativos, drivers, utilitarios y herramientas de trabajo para
+                  dejar los equipos listos para su uso.</p>
+              </div>
+            </div>
+          </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#carouselServicios" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#carouselServicios" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Siguiente</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ========== ORDENES RECIENTES ========== -->
+      <section class="container my-5">
+        <h2 class="border-start border-4 border-info ps-3 mb-4">
+          <i class="bi bi-clipboard-list me-2"></i>Órdenes recientes
+        </h2>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover table-bordered align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Equipo</th>
+                <th sec:authorize="hasRole('ADMIN')">Técnico</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="orden, iterStat : ${ordenes}" th:if="${iterStat.index < 5}">
+                <td th:text="${orden.id}">007</td>
+                <td th:text="${orden.clienteNombre}">Laura García</td>
+                <td th:text="${orden.equipoNombre}">HP Pavilion 15 SN-4521</td>
+                <td sec:authorize="hasRole('ADMIN')" th:text="${orden.tecnicoNombreCompleto}">Martínez, R.</td>
+                <td><span class="badge" th:classappend="${orden.estadoBadgeClass}"
+                    th:text="${orden.estado}">PENDIENTE</span></td>
+                <td th:text="${orden.fechaDisplay}">09/04/2026</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========== MODALES ========== -->
+      <div class="modal fade" id="modalNuevaOrden" tabindex="-1" aria-labelledby="modalNuevaOrdenLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+              <h5 class="modal-title" id="modalNuevaOrdenLabel">Nueva Orden de Servicio</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <form th:action="@{/ordenes/registrar}" method="post" class="row g-3 needs-validation" novalidate>
+                <div class="col-12 col-md-6">
+                  <label for="equipo-cliente" class="form-label">Equipo</label>
+                  <select class="form-select" id="equipo-cliente" name="equipoId" required>
+                    <option selected disabled value="">Seleccione un equipo</option>
+                    <option th:each="equipo : ${equipos}" th:value="${equipo.id}" th:text="${equipo.clienteNombre + ' — ' + equipo.selectLabel}">HP Pavilion 15 (SN-4521)</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="fecha-orden" class="form-label">Fecha de ingreso</label>
+                  <input type="date" class="form-control" id="fecha-orden" name="fecha" required>
+                </div>
+                <div class="col-12">
+                  <label for="descripcion-falla" class="form-label">Descripción de la falla</label>
+                  <input type="text" class="form-control" id="descripcion-falla" name="descripcionFalla"
+                    placeholder="Describa la falla reportada por el cliente" required>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="tecnico-asignado" class="form-label">Técnico asignado</label>
+                  <select class="form-select" id="tecnico-asignado" name="tecnicoAsignado" required>
+                    <option value="" disabled selected>Seleccione un técnico...</option>
+                    <option th:each="tecnico : ${tecnicos}" 
+                            th:value="${tecnico.username}" 
+                            th:text="${tecnico.nombreCompleto}">
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-12 text-end mt-4">
+                  <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="submit" class="btn btn-success">Registrar Orden</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </main>
+  </div>
+
+</body>
+
+</html>

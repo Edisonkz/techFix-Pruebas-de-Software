@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+  layout:decorate="~{layout/base}" lang="es">
+
+<body>
+  <div layout:fragment="content">
+    <main>
+      <!-- ========== HERO ========== -->
+      <section class="bg-danger text-white py-4">
+        <div class="container">
+          <!-- ========== ALERTAS ========== -->
+          <div class="alert alert-success alert-dismissible fade show mb-3 d-flex align-items-center gap-2" th:if="${mensajeExito != null}">
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${mensajeExito}"></span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+          </div>
+          <div class="alert alert-danger alert-dismissible fade show mb-3 d-flex align-items-center gap-2" th:if="${mensajeError != null}">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span th:text="${mensajeError}"></span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+          </div>
+          
+          <div class="row g-3 align-items-center">
+            <div class="col-12 col-lg-7">
+              <h2 class="fw-bold mb-2">Gestión de Órdenes de Servicio</h2>
+              <p class="mb-0 text-white-50">
+                Administra el registro, seguimiento y actualización de órdenes técnicas para laptops y computadoras de
+                escritorio atendidas en TechFix Solutions.
+              </p>
+            </div>
+            <div class="col-12 col-lg-5 d-flex flex-wrap align-items-center justify-content-lg-end gap-3">
+              <span class="badge bg-light text-danger fs-6">Total de órdenes: <span
+                  th:text="${ordenesPage.totalElements}">0</span></span>
+              <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevaOrden">
+                <i class="bi bi-plus-circle me-1"></i>Nueva Orden
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== ALERTAS ========== -->
+      <section class="container mt-4">
+        <div class="alert alert-info mb-0" role="alert">
+          Recuerda validar el estado de cada orden antes de cerrar la jornada para evitar retrasos en la entrega de
+          equipos a los clientes.
+        </div>
+      </section>
+
+      <!-- ========== FILTROS ========== -->
+      <section class="container mt-4">
+        <form th:action="@{/ordenes}" method="get" class="row g-2">
+          <div class="col-12 col-md-4">
+            <label for="buscar-orden" class="form-label">Buscar</label>
+            <input type="text" name="buscar" class="form-control" id="buscar-orden" th:value="${paramBuscar}" placeholder="Buscar por cliente o equipo...">
+          </div>
+          <div class="col-6 col-md-3">
+            <label for="estado-orden" class="form-label">Estado</label>
+            <select name="estado" class="form-select" id="estado-orden">
+              <option value="" th:selected="${paramEstado == null or paramEstado == ''}">Todos</option>
+              <option value="PENDIENTE" th:selected="${paramEstado == 'PENDIENTE'}">PENDIENTE</option>
+              <option value="EN_PROCESO" th:selected="${paramEstado == 'EN_PROCESO'}">EN_PROCESO</option>
+              <option value="LISTO" th:selected="${paramEstado == 'LISTO'}">LISTO</option>
+              <option value="ENTREGADO" th:selected="${paramEstado == 'ENTREGADO'}">ENTREGADO</option>
+              <option value="CANCELADO" th:selected="${paramEstado == 'CANCELADO'}">CANCELADO</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-3" sec:authorize="hasRole('ADMIN')">
+            <label for="tecnico-filtro" class="form-label">Técnico</label>
+            <select name="tecnico" class="form-select" id="tecnico-filtro">
+              <option value="" th:selected="${paramTecnico == null or paramTecnico == ''}">Todos</option>
+              <option th:each="tecnico : ${tecnicos}" th:value="${tecnico.username}" th:text="${tecnico.nombreCompleto}" th:selected="${paramTecnico == tecnico.username}"></option>
+            </select>
+          </div>
+          <div class="col-12 col-md-2 d-grid">
+            <label class="form-label d-none d-md-block">&nbsp;</label>
+            <button type="submit" class="btn btn-outline-dark" id="btn-filtrar">
+              <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ========== TABLA COMPLETA ========== -->
+      <section class="container my-5">
+        <h2 class="border-start border-4 border-info ps-3 mb-4">
+          <i class="bi bi-clipboard-check me-2"></i>Listado de órdenes
+        </h2>
+        <div class="alert alert-warning" th:if="${ordenesPage.empty}">
+          No hay órdenes de servicio registradas en el sistema.
+        </div>
+        <div class="table-responsive" th:unless="${ordenesPage.empty}">
+          <table class="table table-striped table-hover table-bordered align-middle mb-0" id="tabla-ordenes">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Equipo</th>
+                <th>Falla</th>
+                <th sec:authorize="hasRole('ADMIN')">Técnico</th>
+                <th>Estado</th>
+                <th>Fecha ingreso</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="orden : ${ordenesPage.content}">
+                <td th:text="${orden.id}">007</td>
+                <td th:text="${orden.clienteNombre}">Laura García</td>
+                <td th:text="${orden.equipoNombre}">HP Pavilion 15 SN-4521</td>
+                <td th:text="${orden.descripcionFalla}">No enciende tras sobrecarga eléctrica...</td>
+                <td sec:authorize="hasRole('ADMIN')" th:text="${orden.tecnicoNombreCompleto}">Martínez, R.</td>
+                <td><span th:class="'badge ' + ${orden.estadoBadgeClass}" th:text="${orden.estado}">PENDIENTE</span>
+                </td>
+                <td th:text="${orden.fechaDisplay}">09/04/2026</td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
+                      data-bs-target="#modalEditarOrden" aria-label="Editar orden"
+                      th:attr="data-id=${orden.id}, data-estado=${orden.estado}, data-tecnico=${orden.tecnicoAsignado}, data-diagnostico=${orden.diagnostico}, data-equipoid=${orden.equipoId}, data-falla=${orden.descripcionFalla}, data-fecha=${orden.fechaISO}"
+                      th:disabled="${orden.estado == 'CANCELADO' or orden.estado == 'ENTREGADO'}">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <span sec:authorize="hasAnyRole('ADMIN', 'TECNICO')">
+                      <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal"
+                        data-bs-target="#modalCancelarOrden" aria-label="Cancelar orden" th:attr="data-id=${orden.id}"
+                        th:disabled="${orden.estado == 'CANCELADO' or orden.estado == 'ENTREGADO'}">
+                        <i class="bi bi-x-circle"></i>
+                      </button>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Paginación de Bootstrap renderizada por Servidor -->
+        <nav aria-label="Navegación de órdenes" class="mt-4" th:if="${ordenesPage.totalPages > 1}">
+          <ul class="pagination justify-content-center mb-0">
+            <li class="page-item" th:classappend="${ordenesPage.first} ? 'disabled'">
+              <a class="page-link" th:href="@{/ordenes(pagina=${ordenesPage.number}, buscar=${paramBuscar}, estado=${paramEstado}, tecnico=${paramTecnico})}">Previous</a>
+            </li>
+            
+            <li class="page-item" th:each="i : ${#numbers.sequence(1, ordenesPage.totalPages)}"
+                th:classappend="${ordenesPage.number + 1 == i} ? 'active'">
+              <a class="page-link" th:href="@{/ordenes(pagina=${i}, buscar=${paramBuscar}, estado=${paramEstado}, tecnico=${paramTecnico})}" th:text="${i}"></a>
+            </li>
+            
+            <li class="page-item" th:classappend="${ordenesPage.last} ? 'disabled'">
+              <a class="page-link" th:href="@{/ordenes(pagina=${ordenesPage.number + 2}, buscar=${paramBuscar}, estado=${paramEstado}, tecnico=${paramTecnico})}">Next</a>
+            </li>
+          </ul>
+        </nav>
+      </section>
+
+      <!-- ========== MODALES =========== -->
+      <div class="modal fade" id="modalNuevaOrden" tabindex="-1" aria-labelledby="modalNuevaOrdenLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+              <h5 class="modal-title" id="modalNuevaOrdenLabel">Nueva Orden de Servicio</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <form th:action="@{/ordenes/registrar}" method="post" th:object="${orden}" class="row g-3 needs-validation" novalidate>
+                <div class="col-12 col-md-6">
+                  <label for="equipo-cliente-ord" class="form-label">Equipo</label>
+                  <select class="form-select" th:classappend="${#fields.hasErrors('equipoId')} ? 'is-invalid'" id="equipo-cliente-ord" th:field="*{equipoId}" required>
+                    <option selected disabled value="">Seleccione un equipo</option>
+                    <option th:each="equipo : ${equipos}" th:value="${equipo.id}" th:text="${equipo.clienteNombre + ' — ' + equipo.selectLabel}">HP Pavilion 15 (SN-4521)</option>
+                  </select>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('equipoId')}" th:errors="*{equipoId}"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="fecha-orden-ord" class="form-label">Fecha de ingreso</label>
+                  <input type="date" class="form-control" th:classappend="${#fields.hasErrors('fecha')} ? 'is-invalid'" id="fecha-orden-ord" th:field="*{fecha}" required>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('fecha')}" th:errors="*{fecha}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="descripcion-falla-ord" class="form-label">Descripción de la falla</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('descripcionFalla')} ? 'is-invalid'" id="descripcion-falla-ord" th:field="*{descripcionFalla}"
+                    placeholder="Describa la falla reportada por el cliente" required>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('descripcionFalla')}" th:errors="*{descripcionFalla}"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="tecnico-asignado-ord" class="form-label">Técnico asignado</label>
+                  <select class="form-select" th:classappend="${#fields.hasErrors('tecnicoAsignado')} ? 'is-invalid'" id="tecnico-asignado-ord" th:field="*{tecnicoAsignado}" required>
+                    <option selected disabled value="">Seleccione un técnico</option>
+                    <option th:each="tecnico : ${tecnicos}" th:value="${tecnico.username}" th:text="${tecnico.nombreCompleto}"></option>
+                  </select>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('tecnicoAsignado')}" th:errors="*{tecnicoAsignado}"></div>
+                </div>
+
+                <div class="col-12 text-end mt-4">
+                  <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="submit" class="btn btn-success">Registrar Orden</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="modalEditarOrden" tabindex="-1" aria-labelledby="modalEditarOrdenLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+              <h5 class="modal-title" id="modalEditarOrdenLabel">Editar Orden #007</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <form th:action="@{/ordenes/editar}" method="post" th:object="${orden}" class="row g-3 needs-validation" novalidate>
+                <!-- Campos ocultos requeridos por @Valid -->
+                <input type="hidden" id="editarEquipoId" th:field="*{equipoId}">
+                <input type="hidden" id="editarDescripcionFalla" th:field="*{descripcionFalla}">
+                <input type="hidden" id="editarFecha" th:field="*{fecha}">
+                
+                <div class="col-12">
+                  <label for="editarIdOrden" class="form-label">ID Orden</label>
+                  <input type="text" class="form-control" id="editarIdOrden" th:field="*{id}" readonly required>
+                </div>
+                <div class="col-12">
+                  <label for="editarEstado" class="form-label">Estado</label>
+                  <select class="form-select" th:classappend="${#fields.hasErrors('estado')} ? 'is-invalid'" id="editarEstado" th:field="*{estado}" required>
+                    <option value="PENDIENTE">PENDIENTE</option>
+                    <option value="EN_PROCESO">EN_PROCESO</option>
+                    <option value="LISTO">LISTO</option>
+                    <option value="ENTREGADO">ENTREGADO</option>
+                    <option value="CANCELADO">CANCELADO</option>
+                  </select>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('estado')}" th:errors="*{estado}"></div>
+                </div>
+                <!-- Renderizado condicional del selector de Técnico (Visible solo para ADMIN) -->
+                <div class="col-12" sec:authorize="hasRole('ADMIN')">
+                  <label for="editarTecnico" class="form-label">Técnico</label>
+                  <select class="form-select" th:classappend="${#fields.hasErrors('tecnicoAsignado')} ? 'is-invalid'" id="editarTecnico" th:field="*{tecnicoAsignado}" required>
+                    <option selected disabled value="">Seleccione un técnico</option>
+                    <option th:each="tecnico : ${tecnicos}" th:value="${tecnico.username}" th:text="${tecnico.nombreCompleto}"></option>
+                  </select>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('tecnicoAsignado')}" th:errors="*{tecnicoAsignado}"></div>
+                </div>
+                <!-- Campo oculto para mantener la asignación del técnico en la solicitud (Rol TECNICO) -->
+                <input type="hidden" sec:authorize="hasRole('TECNICO')" id="editarTecnicoHidden" th:field="*{tecnicoAsignado}">
+                <div class="col-12">
+                  <label for="editarDiagnostico" class="form-label">Diagnóstico</label>
+                  <textarea class="form-control" th:classappend="${#fields.hasErrors('diagnostico')} ? 'is-invalid'" id="editarDiagnostico" th:field="*{diagnostico}" rows="4"
+                    placeholder="Ingrese el diagnóstico técnico realizado"></textarea>
+                  <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('diagnostico')}" th:errors="*{diagnostico}"></div>
+                </div>
+                <div class="col-12 text-end mt-4">
+                  <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="submit" class="btn btn-success">Guardar cambios</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="modalCancelarOrden" tabindex="-1" aria-labelledby="modalCancelarOrdenLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+              <h5 class="modal-title" id="modalCancelarOrdenLabel">Cancelar Orden</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <div class="alert alert-dark" role="alert">
+                Esta acción es irreversible. La orden quedará registrada como cancelada en el sistema.
+              </div>
+              <form th:action="@{/ordenes/cancelar}" method="post" class="row g-3 needs-validation" novalidate>
+                <div class="col-12">
+                  <label for="cancelarIdOrden" class="form-label">ID Orden</label>
+                  <input type="text" class="form-control" id="cancelarIdOrden" name="idOrden" readonly required>
+                </div>
+                <div class="col-12">
+                  <label for="motivo-cancelacion" class="form-label">Motivo</label>
+                  <select class="form-select" id="motivo-cancelacion" name="motivo" required>
+                    <option selected disabled value="">Seleccione un motivo</option>
+                    <option value="Solicitud del cliente">Solicitud del cliente</option>
+                    <option value="Error de registro">Error de registro</option>
+                    <option value="Equipo no reparable">Equipo no reparable</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label for="detalle-cancelacion" class="form-label">Detalle adicional (opcional)</label>
+                  <textarea class="form-control" id="detalle-cancelacion" rows="3"
+                    placeholder="Ingrese información complementaria"></textarea>
+                </div>
+                <div class="col-12 text-end mt-4">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                  <button type="submit" class="btn btn-dark">Confirmar cancelación</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script th:inline="none">
+
+
+    document.getElementById('modalEditarOrden').addEventListener('show.bs.modal', function (event) {
+      var button = event.relatedTarget;
+      var id = button.getAttribute('data-id');
+      var estado = button.getAttribute('data-estado');
+      var tecnico = button.getAttribute('data-tecnico');
+      var diagnostico = button.getAttribute('data-diagnostico');
+      document.getElementById('modalEditarOrdenLabel').textContent = 'Editar Orden ' + id;
+      document.getElementById('editarIdOrden').value = id;
+      document.getElementById('editarEstado').value = estado;
+      document.getElementById('editarDiagnostico').value = diagnostico || '';
+      
+      // Llenar campos ocultos obligatorios
+      document.getElementById('editarEquipoId').value = button.getAttribute('data-equipoid');
+      document.getElementById('editarDescripcionFalla').value = button.getAttribute('data-falla');
+      document.getElementById('editarFecha').value = button.getAttribute('data-fecha');
+
+      // Técnico: llenar el select visible (ADMIN) o el input oculto (TECNICO)
+      var selectTecnico = document.getElementById('editarTecnico');
+      if (selectTecnico) { selectTecnico.value = tecnico; }
+      var hiddenTecnico = document.getElementById('editarTecnicoHidden');
+      if (hiddenTecnico) { hiddenTecnico.value = tecnico; }
+    });
+
+    document.getElementById('modalCancelarOrden').addEventListener('show.bs.modal', function (event) {
+      var button = event.relatedTarget;
+      document.getElementById('cancelarIdOrden').value = button.getAttribute('data-id');
+    });
+    </script>
+  </div>
+</body>
+
+</html>

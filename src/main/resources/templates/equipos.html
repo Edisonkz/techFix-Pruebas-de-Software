@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}" lang="es">
+<body>
+  <div layout:fragment="content">
+    <main>
+      <!-- ========== HERO ========== -->
+      <section class="bg-danger text-white py-4">
+        <div class="container">
+          <!-- ========== ALERTAS ========== -->
+          <div class="alert alert-success alert-dismissible fade show mb-3 d-flex align-items-center gap-2" th:if="${mensajeExito != null}">
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${mensajeExito}"></span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+          </div>
+          <div class="alert alert-danger alert-dismissible fade show mb-3 d-flex align-items-center gap-2" th:if="${mensajeError != null}">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span th:text="${mensajeError}"></span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+          </div>
+          
+          <div class="row g-3 align-items-center">
+            <div class="col-12 col-lg-8">
+              <h2 class="fw-bold mb-2">Gestión de Equipos</h2>
+              <p class="mb-0 text-white-50">
+                Registra laptops y desktops, consulta el historial de atención y relaciona cada equipo con su cliente propietario dentro del sistema.
+              </p>
+            </div>
+            <div class="col-12 col-lg-4 text-lg-end">
+              <span class="badge bg-light text-danger fs-6">Equipos registrados: <span th:text="${equiposPage.totalElements}">0</span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== BUSCADOR Y BOTON ========== -->
+      <section class="container mt-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+          <div class="flex-grow-1">
+            <input type="text" class="form-control" id="buscar-equipo" placeholder="Buscar equipo por marca, modelo o serie...">
+          </div>
+          <div class="d-grid">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoEquipo" sec:authorize="hasRole('ADMIN')">
+              <i class="bi bi-plus-circle me-1"></i>Nuevo Equipo
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== TABLA DE EQUIPOS ========== -->
+      <section class="container my-5">
+        <h2 class="border-start border-4 border-info ps-3 mb-4">
+          <i class="bi bi-pc-display-horizontal me-2"></i>Listado de equipos
+        </h2>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover table-bordered align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>N° Serie</th>
+                <th>Tipo</th>
+                <th>Cliente propietario</th>
+                <th>Órdenes atendidas</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-equipos">
+              <tr th:if="${equiposPage.empty}">
+                <td colspan="8" class="text-center text-muted">No hay equipos registrados en el sistema.</td>
+              </tr>
+              <tr th:each="equipo : ${equiposPage.content}">
+                <td th:text="${equipo.id}">001</td>
+                <td th:text="${equipo.marca}">HP</td>
+                <td th:text="${equipo.modelo}">Pavilion 15</td>
+                <td th:text="${equipo.numeroSerie}">SN-4521</td>
+                <td><span class="badge bg-warning text-dark" th:text="${equipo.tipo}">Laptop</span></td>
+                <td th:text="${equipo.clienteNombre}">Laura García</td>
+                <td th:text="${equipo.ordenesAtendidas}">0</td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalDetalleEquipo" aria-label="Ver detalle del equipo"
+                            th:attr="data-bs-marca=${equipo.marca}, data-bs-modelo=${equipo.modelo}, data-bs-serie=${equipo.numeroSerie}, data-bs-tipo=${equipo.tipo}, data-bs-cliente=${equipo.clienteNombre}, data-bs-orden1=${equipo.ordenReciente1}, data-bs-orden2=${equipo.ordenReciente2}">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success"
+                        data-bs-toggle="modal" sec:authorize="hasRole('ADMIN')"
+                        data-bs-target="#modalEditarEquipo"
+                        aria-label="Editar equipo"
+                        th:attr="data-bs-id=${equipo.id},
+                                 data-bs-marca=${equipo.marca},
+                                 data-bs-modelo=${equipo.modelo},
+                                 data-bs-serie=${equipo.numeroSerie},
+                                 data-bs-tipo=${equipo.tipo},
+                                 data-bs-clienteid=${equipo.clienteId}">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Paginación de Bootstrap renderizada por Servidor -->
+        <nav aria-label="Navegación de equipos" class="mt-4" th:if="${equiposPage.totalPages > 1}">
+          <ul class="pagination justify-content-center mb-0">
+            <li class="page-item" th:classappend="${equiposPage.first} ? 'disabled'">
+              <a class="page-link" th:href="@{/equipos(pagina=${equiposPage.number})}">Previous</a>
+            </li>
+            
+            <li class="page-item" th:each="i : ${#numbers.sequence(1, equiposPage.totalPages)}"
+                th:classappend="${equiposPage.number + 1 == i} ? 'active'">
+              <a class="page-link" th:href="@{/equipos(pagina=${i})}" th:text="${i}"></a>
+            </li>
+            
+            <li class="page-item" th:classappend="${equiposPage.last} ? 'disabled'">
+              <a class="page-link" th:href="@{/equipos(pagina=${equiposPage.number + 2})}">Next</a>
+            </li>
+          </ul>
+        </nav>
+      </section>
+
+      <!-- ========== MODALES ========== -->
+      <div class="modal fade" id="modalNuevoEquipo" tabindex="-1" aria-labelledby="modalNuevoEquipoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+              <h5 class="modal-title" id="modalNuevoEquipoLabel">Registrar Equipo</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <form th:action="@{/equipos/registrar}" method="post" th:object="${equipo}" class="row g-3 needs-validation" novalidate>
+                <div class="col-12 col-md-6">
+                  <label for="tipo-equipo" class="form-label">Tipo</label>
+                  <select class="form-select" th:classappend="${#fields.hasErrors('tipo')} ? 'is-invalid'" id="tipo-equipo" th:field="*{tipo}" required>
+                    <option selected disabled value="">Seleccione un tipo</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Desktop">Desktop</option>
+                  </select>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('tipo')}" th:errors="*{tipo}"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="cliente-propietario" class="form-label">Cliente propietario</label>
+                  <select class="form-select" th:classappend="${#fields.hasErrors('clienteId')} ? 'is-invalid'" id="cliente-propietario" th:field="*{clienteId}" required>
+                    <option selected disabled value="">Seleccione un cliente</option>
+                    <option th:each="cliente : ${clientes}"
+                            th:value="${cliente.id}"
+                            th:text="${cliente.nombre}">Laura García</option>
+                  </select>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('clienteId')}" th:errors="*{clienteId}"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="marca-equipo" class="form-label">Marca</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('marca')} ? 'is-invalid'" id="marca-equipo" th:field="*{marca}" placeholder="Ej: HP, Dell, Lenovo" required>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('marca')}" th:errors="*{marca}"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="modelo-equipo" class="form-label">Modelo</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('modelo')} ? 'is-invalid'" id="modelo-equipo" th:field="*{modelo}" placeholder="Ingrese el modelo del equipo" required>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('modelo')}" th:errors="*{modelo}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="numero-serie" class="form-label">Número de serie</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('numeroSerie')} ? 'is-invalid'" id="numero-serie" th:field="*{numeroSerie}" placeholder="Ingrese el número de serie" required>
+                  <div class="form-text">El número de serie debe ser único para cada equipo registrado.</div>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('numeroSerie')}" th:errors="*{numeroSerie}"></div>
+                </div>
+                <div class="col-12 text-end mt-4">
+                  <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="submit" class="btn btn-success">Registrar Equipo</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="modalDetalleEquipo" tabindex="-1" aria-labelledby="modalDetalleEquipoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-dark">
+              <h5 class="modal-title" id="modalDetalleEquipoLabel">Detalle del Equipo</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row g-3 mb-4">
+                <div class="col-12 col-md-6">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <small class="text-muted d-block">Tipo</small>
+                      <span class="fw-bold" id="detalle-tipo-equipo">Laptop</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <small class="text-muted d-block">Marca</small>
+                      <span class="fw-bold" id="detalle-marca-equipo">HP</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <small class="text-muted d-block">Modelo</small>
+                      <span class="fw-bold" id="detalle-modelo-equipo">Pavilion 15</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <small class="text-muted d-block">N° de Serie</small>
+                      <span class="fw-bold" id="detalle-serie-equipo">SN-4521</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <small class="text-muted d-block">Cliente Propietario</small>
+                      <div class="d-flex align-items-center gap-2 mt-1">
+                        <i class="bi bi-person-circle fs-4 text-secondary"></i>
+                        <span class="fw-bold" id="detalle-cliente-equipo">Laura García</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <h6 class="fw-bold mb-3" id="titulo-historial-ordenes">Historial de órdenes recientes</h6>
+              <ul class="list-group" id="lista-historial-ordenes">
+                <!-- Se inyecta dinámicamente vía JS -->
+              </ul>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cerrar</button>
+              <a th:href="@{/ordenes}" class="btn btn-success">
+                <i class="bi bi-calendar-plus me-1"></i>Nueva Orden
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="modalEditarEquipo" tabindex="-1" aria-labelledby="modalEditarEquipoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-dark">
+              <h5 class="modal-title" id="modalEditarEquipoLabel">Editar Equipo</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <form th:action="@{/equipos/actualizar}" method="post" th:object="${equipo}" class="row g-3 needs-validation" novalidate>
+                <div class="col-12">
+                  <label for="editar-equipo-id" class="form-label">ID de Equipo</label>
+                  <input type="text" class="form-control" id="editar-equipo-id" th:field="*{id}" readonly>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="editar-tipo-equipo" class="form-label">Tipo</label>
+                  <select class="form-select" th:classappend="${#fields.hasErrors('tipo')} ? 'is-invalid'" id="editar-tipo-equipo" th:field="*{tipo}" required>
+                    <option selected disabled value="">Seleccione un tipo</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Desktop">Desktop</option>
+                  </select>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('tipo')}" th:errors="*{tipo}"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="editar-cliente-propietario" class="form-label">Cliente propietario</label>
+                  <select class="form-select" th:classappend="${#fields.hasErrors('clienteId')} ? 'is-invalid'" id="editar-cliente-propietario" th:field="*{clienteId}" required>
+                    <option selected disabled value="">Seleccione un cliente</option>
+                    <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nombre}">Laura García</option>
+                  </select>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('clienteId')}" th:errors="*{clienteId}"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="editar-marca-equipo" class="form-label">Marca</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('marca')} ? 'is-invalid'" id="editar-marca-equipo" th:field="*{marca}" required>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('marca')}" th:errors="*{marca}"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="editar-modelo-equipo" class="form-label">Modelo</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('modelo')} ? 'is-invalid'" id="editar-modelo-equipo" th:field="*{modelo}" required>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('modelo')}" th:errors="*{modelo}"></div>
+                </div>
+                <div class="col-12">
+                  <label for="editar-numero-serie" class="form-label">Número de serie</label>
+                  <input type="text" class="form-control" th:classappend="${#fields.hasErrors('numeroSerie')} ? 'is-invalid'" id="editar-numero-serie" th:field="*{numeroSerie}" required>
+                  <div class="invalid-feedback" th:if="${#fields.hasErrors('numeroSerie')}" th:errors="*{numeroSerie}"></div>
+                </div>
+                <div class="col-12 text-end mt-4">
+                  <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="submit" class="btn btn-info">Guardar Cambios</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script th:inline="none">
+      document.getElementById('buscar-equipo').addEventListener('input', function () {
+          var q = this.value.toLowerCase().trim();
+          document.querySelectorAll('#tabla-equipos tr').forEach(function(fila) {
+              var texto = fila.textContent.toLowerCase();
+              fila.style.display = texto.includes(q) ? '' : 'none';
+          });
+      });
+
+      document.getElementById('modalEditarEquipo').addEventListener('show.bs.modal', function (event) {
+          var button = event.relatedTarget;
+          document.getElementById('editar-equipo-id').value = button.getAttribute('data-bs-id');
+          document.getElementById('editar-marca-equipo').value = button.getAttribute('data-bs-marca');
+          document.getElementById('editar-modelo-equipo').value = button.getAttribute('data-bs-modelo');
+          document.getElementById('editar-numero-serie').value = button.getAttribute('data-bs-serie');
+          document.getElementById('editar-tipo-equipo').value = button.getAttribute('data-bs-tipo');
+          document.getElementById('editar-cliente-propietario').value = button.getAttribute('data-bs-clienteid');
+          document.getElementById('modalEditarEquipoLabel').textContent = 'Editar Equipo ' + button.getAttribute('data-bs-id');
+      });
+
+      document.getElementById('modalDetalleEquipo').addEventListener('show.bs.modal', function (event) {
+          var button = event.relatedTarget;
+          document.getElementById('detalle-tipo-equipo').textContent = button.getAttribute('data-bs-tipo');
+          document.getElementById('detalle-marca-equipo').textContent = button.getAttribute('data-bs-marca');
+          document.getElementById('detalle-modelo-equipo').textContent = button.getAttribute('data-bs-modelo');
+          document.getElementById('detalle-serie-equipo').textContent = button.getAttribute('data-bs-serie');
+          document.getElementById('detalle-cliente-equipo').textContent = button.getAttribute('data-bs-cliente');
+          
+          var orden1 = button.getAttribute('data-bs-orden1');
+          var orden2 = button.getAttribute('data-bs-orden2');
+          var lista = document.getElementById('lista-historial-ordenes');
+          lista.innerHTML = ''; // Limpiar
+          
+          function agregarOrden(dataStr) {
+              if (dataStr && dataStr.trim() !== '') {
+                  var parts = dataStr.split('|');
+                  if (parts.length >= 3) {
+                      var titulo = parts[0];
+                      var fecha = parts[1];
+                      var estado = parts[2];
+                      
+                      var badgeColor = 'bg-secondary';
+                      if(estado === 'PENDIENTE') badgeColor = 'bg-warning text-dark';
+                      if(estado === 'EN_PROCESO') badgeColor = 'bg-info text-dark';
+                      if(estado === 'LISTO') badgeColor = 'bg-primary';
+                      if(estado === 'ENTREGADO') badgeColor = 'bg-success';
+                      if(estado === 'CANCELADO') badgeColor = 'bg-danger';
+
+                      var li = document.createElement('li');
+                      li.className = 'list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2';
+                      li.innerHTML = '<span><i class="bi bi-tools me-2 text-muted"></i>' + titulo + '</span>' +
+                                     '<div><span class="badge bg-light text-dark me-2"><i class="bi bi-calendar me-1"></i>' + fecha + '</span>' +
+                                     '<span class="badge ' + badgeColor + '">' + estado + '</span></div>';
+                      lista.appendChild(li);
+                  }
+              }
+          }
+          
+          if (!orden1 && !orden2) {
+              var li = document.createElement('li');
+              li.className = 'list-group-item text-center text-muted';
+              li.textContent = 'Este equipo aún no tiene órdenes registradas.';
+              lista.appendChild(li);
+          } else {
+              agregarOrden(orden1);
+              agregarOrden(orden2);
+          }
+      });
+    </script>
+  </div>
+</body>
+</html>
