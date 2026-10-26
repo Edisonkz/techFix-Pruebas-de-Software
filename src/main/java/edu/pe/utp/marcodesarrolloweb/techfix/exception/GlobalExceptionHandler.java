@@ -28,4 +28,11 @@ public class GlobalExceptionHandler {
         String referer = request.getHeader("Referer");
         return "redirect:" + (referer != null ? referer : "/inicio");
     }
+
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    @org.springframework.web.bind.annotation.ResponseBody
+    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.UNAUTHORIZED)
+    public java.util.Map<String, String> handleBadCredentials(org.springframework.security.authentication.BadCredentialsException e) {
+        return java.util.Map.of("error", "Credenciales inválidas", "status", "401");
+    }
 }

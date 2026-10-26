@@ -1,0 +1,39 @@
+name: TechFix QA CI Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. Checkout del Código
+      uses: actions/checkout@v4
+
+    - name: 2. Configurar Java JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 3. Compilación y Ejecución de Pruebas con Maven y JaCoCo
+      run: mvn clean test jacoco:report
+
+    - name: 4. Publicar Reporte de Cobertura JaCoCo
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: jacoco-coverage-report
+        path: target/site/jacoco/
+
+    - name: 5. Publicar Reporte de Pruebas Surefire
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: surefire-test-results
+        path: target/surefire-reports/
